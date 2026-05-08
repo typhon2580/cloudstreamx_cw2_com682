@@ -320,6 +320,115 @@ main {
   font-weight: 700;
 }
 
+/* Demo Authentication */
+
+.auth-panel {
+  width: min(620px, 100%);
+  margin: 34px auto 0;
+}
+
+.auth-card,
+.signed-in-card {
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  border-radius: 30px;
+  padding: clamp(22px, 4vw, 30px);
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.72)),
+    radial-gradient(circle at top right, rgba(139, 92, 246, 0.16), transparent 38%);
+  box-shadow: var(--shadow-card);
+  text-align: left;
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 22px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.48);
+}
+
+.auth-tabs button {
+  border: 0;
+  border-radius: 999px;
+  padding: 11px 14px;
+  color: var(--text-muted);
+  background: transparent;
+  font-weight: 900;
+}
+
+.auth-tabs button.active {
+  color: white;
+  background: linear-gradient(135deg, var(--blue-strong), var(--purple));
+}
+
+.auth-card form {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-card h3,
+.signed-in-card h3 {
+  margin: 0;
+  font-size: 25px;
+  letter-spacing: -0.035em;
+}
+
+.auth-card label {
+  display: grid;
+  gap: 8px;
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.auth-note {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.auth-label {
+  display: inline-flex;
+  margin-bottom: 12px;
+  border-radius: 999px;
+  padding: 7px 11px;
+  color: #a5f3fc;
+  background: rgba(14, 165, 233, 0.14);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.signed-in-card p {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+}
+
+.auth-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.auth-actions button {
+  flex: 1;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 16px;
+  color: white;
+  background: linear-gradient(135deg, var(--blue-strong), var(--purple));
+  font-weight: 900;
+}
+
+.auth-actions .secondary {
+  background: rgba(30, 41, 59, 0.94);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
 /* Sections */
 
 .page-section {
@@ -977,6 +1086,11 @@ input[readonly] {
   .preview-wrap {
     height: 250px;
   }
+
+  .auth-card,
+  .signed-in-card {
+    border-radius: 24px;
+  }
 }
 
 @media (max-width: 720px) {
@@ -1008,7 +1122,8 @@ input[readonly] {
 
   .home-actions,
   .card-actions,
-  .modal-actions {
+  .modal-actions,
+  .auth-actions {
     flex-direction: column;
     align-items: stretch;
   }
@@ -1029,7 +1144,9 @@ input[readonly] {
   .media-card,
   .evidence-card,
   .architecture-box,
-  .modal {
+  .modal,
+  .auth-card,
+  .signed-in-card {
     border-radius: 22px;
   }
 
@@ -1065,5 +1182,10 @@ input[readonly] {
 
   .meta-list {
     font-size: 12px;
+  }
+
+  .auth-tabs {
+    grid-template-columns: 1fr;
+    border-radius: 20px;
   }
 }

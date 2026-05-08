@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getAllMedia,
   createMedia,
@@ -20,6 +20,12 @@ const emptyForm = {
   mediaType: "",
   size: 0,
   fileContentBase64: ""
+};
+
+const emptyAuthForm = {
+  name: "",
+  email: "",
+  password: ""
 };
 
 const getFileExtension = (fileName) => {
@@ -78,6 +84,12 @@ function App() {
   const [toast, setToast] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authMode, setAuthMode] = useState("signin");
+  const [authForm, setAuthForm] = useState(emptyAuthForm);
+
+  const authPanelRef = useRef(null);
+
   const showToast = (type, message) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3500);
@@ -87,6 +99,19 @@ function App() {
     setActivePage(page);
     setMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleNavSignIn = () => {
+    setActivePage("home");
+    setAuthMode("signin");
+    setMobileMenuOpen(false);
+
+    setTimeout(() => {
+      authPanelRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+    }, 150);
   };
 
   const loadMedia = async () => {
@@ -104,6 +129,14 @@ function App() {
 
   useEffect(() => {
     loadMedia();
+  }, []);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("cloudstreamx_current_user");
+
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+    }
   }, []);
 
   const stats = useMemo(() => {
@@ -146,6 +179,96 @@ function App() {
       ...previous,
       [name]: value
     }));
+  };
+
+  const handleAuthInputChange = (event) => {
+    const { name, value } = event.target;
+
+    setAuthForm((previous) => ({
+      ...previous,
+      [name]: value
+    }));
+  };
+
+  const handleSignUp = (event) => {
+    event.preventDefault();
+
+    if (!authForm.name.trim() || !authForm.email.trim() || !authForm.password) {
+      showToast("error", "Please enter your name, email and password.");
+      return;
+    }
+
+    if (authForm.password.length < 6) {
+      showToast("error", "Password must be at least 6 characters.");
+      return;
+    }
+
+    const demoUser = {
+      name: authForm.name.trim(),
+      email: authForm.email.trim().toLowerCase(),
+      password: authForm.password
+    };
+
+    localStorage.setItem("cloudstreamx_demo_user", JSON.stringify(demoUser));
+    localStorage.setItem(
+      "cloudstreamx_current_user",
+      JSON.stringify({
+        name: demoUser.name,
+        email: demoUser.email
+      })
+    );
+
+    setCurrentUser({
+      name: demoUser.name,
+      email: demoUser.email
+    });
+
+    setAuthForm(emptyAuthForm);
+    showToast("success", "Account created and signed in successfully.");
+  };
+
+  const handleSignIn = (event) => {
+    event.preventDefault();
+
+    const savedUser = localStorage.getItem("cloudstreamx_demo_user");
+
+    if (!savedUser) {
+      showToast("error", "No account found. Please sign up first.");
+      return;
+    }
+
+    const user = JSON.parse(savedUser);
+
+    if (
+      user.email !== authForm.email.trim().toLowerCase() ||
+      user.password !== authForm.password
+    ) {
+      showToast("error", "Invalid email or password.");
+      return;
+    }
+
+    localStorage.setItem(
+      "cloudstreamx_current_user",
+      JSON.stringify({
+        name: user.name,
+        email: user.email
+      })
+    );
+
+    setCurrentUser({
+      name: user.name,
+      email: user.email
+    });
+
+    setAuthForm(emptyAuthForm);
+    showToast("success", `Welcome back, ${user.name}.`);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("cloudstreamx_current_user");
+    setCurrentUser(null);
+    setAuthMode("signin");
+    showToast("success", "Logged out successfully.");
   };
 
   const handleFileChange = (event) => {
@@ -386,9 +509,15 @@ function App() {
           {navButton("evidence", "Azure Evidence")}
         </div>
 
-        <button className="signin-btn" type="button">
-          Sign in
-        </button>
+        {currentUser ? (
+          <button className="signin-btn" type="button" onClick={handleLogout}>
+            Logout
+          </button>
+        ) : (
+          <button className="signin-btn" type="button" onClick={handleNavSignIn}>
+            Sign in
+          </button>
+        )}
       </nav>
 
       {toast && (
@@ -434,6 +563,101 @@ function App() {
                 <span>Blob Storage</span>
                 <span>Cosmos DB</span>
                 <span>Application Insights</span>
+              </div>
+
+              <div className="auth-panel" ref={authPanelRef}>
+                {currentUser ? (
+                  <div className="signed-in-card">
+                    <span className="auth-label">Signed in user</span>
+                    <h3>Welcome, {currentUser.name}</h3>
+                    <p>{currentUser.email}</p>
+
+                    <div className="auth-actions">
+                      <button type="button" onClick={() => goToPage("upload")}>
+                        Upload Media
+                      </button>
+                      <button
+                        className="secondary"
+                        type="button"
+                        onClick={handleLogout}
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="auth-card">
+                    <div className="auth-tabs">
+                      <button
+                        type="button"
+                        className={authMode === "signin" ? "active" : ""}
+                        onClick={() => setAuthMode("signin")}
+                      >
+                        Sign In
+                      </button>
+                      <button
+                        type="button"
+                        className={authMode === "signup" ? "active" : ""}
+                        onClick={() => setAuthMode("signup")}
+                      >
+                        Sign Up
+                      </button>
+                    </div>
+
+                    <form
+                      onSubmit={authMode === "signin" ? handleSignIn : handleSignUp}
+                    >
+                      <h3>
+                        {authMode === "signin"
+                          ? "Sign in to CloudStreamX"
+                          : "Create demo account"}
+                      </h3>
+
+                      {authMode === "signup" && (
+                        <label>
+                          Full Name
+                          <input
+                            name="name"
+                            value={authForm.name}
+                            onChange={handleAuthInputChange}
+                            placeholder="Enter your name"
+                          />
+                        </label>
+                      )}
+
+                      <label>
+                        Email
+                        <input
+                          name="email"
+                          type="email"
+                          value={authForm.email}
+                          onChange={handleAuthInputChange}
+                          placeholder="example@email.com"
+                        />
+                      </label>
+
+                      <label>
+                        Password
+                        <input
+                          name="password"
+                          type="password"
+                          value={authForm.password}
+                          onChange={handleAuthInputChange}
+                          placeholder="Minimum 6 characters"
+                        />
+                      </label>
+
+                      <button className="submit-btn" type="submit">
+                        {authMode === "signin" ? "Sign In" : "Create Account"}
+                      </button>
+
+                      <p className="auth-note">
+                        Demo authentication only. Production authentication would
+                        use Azure Entra ID, Auth0 or a secure backend service.
+                      </p>
+                    </form>
+                  </div>
+                )}
               </div>
             </div>
           </section>
